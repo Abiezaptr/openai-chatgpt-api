@@ -119,18 +119,20 @@ app.post("/chatwithfile", async (req, res) => {
       { headers }
     );
 
-    const data = {
-      gpt: response.data,
-      question: question,
-      base64_image: base64_image,
+    // Filter response data to include only desired information
+    const filteredData = {
+      prompt: question,
+      model: response.data.model,
+      summary: response.data.choices[0].message.content,
     };
 
-    return res.status(200).json(data);
+    return res.status(200).json(filteredData);
   } catch (error) {
     console.error("Error:", error.message);
     return res.status(500).json({ error: "Error processing request" });
   }
 });
+
 
 const PORT = process.env.PORT || 5000;
 
