@@ -86,7 +86,7 @@ app.get("/completion", async (req, res) => {
   }
 });
 
-app.post("/chatwithfile", async (req, res) => {
+app.post("/imagechat", async (req, res) => {
   const question = "Please summarize this file";
   const imagePath = "uploads/superseru.png";
 
@@ -95,7 +95,7 @@ app.post("/chatwithfile", async (req, res) => {
     const base64_image = `data:image/jpeg;base64,${contents.toString("base64")}`;
 
     const payload = {
-      model: "gpt-4-turbo",
+      model: "gpt-4-vision-preview",
       messages: [
         {
           role: "user",
