@@ -1,6 +1,7 @@
 import express from "express";
 import OpenAI from "openai";
 import bodyParser from "body-parser";
+import cors from "cors"; // Import middleware CORS
 import dotenv from "dotenv";
 import axios from "axios";
 import fs from "fs";
@@ -11,7 +12,9 @@ const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const app = express();
 app.use(bodyParser.json());
+app.use(cors()); // Tambahkan middleware CORS ke aplikasi Express
 
+// Routes
 app.get("/", (req, res) => {
   res.send("Hello World..!!");
 });
@@ -57,14 +60,24 @@ app.post("/openai_ask", async (req, res) => {
 
 app.get("/chatcompletion", async (req, res) => {
   try {
+    // Mendapatkan pertanyaan dari query parameter
+    const userQuestion = req.query.question;
+
+    // Memeriksa apakah query parameter 'question' ada
+    if (!userQuestion) {
+      return res.status(400).json({ error: "Question is required" });
+    }
+
+    // Menggunakan pertanyaan dari pengguna untuk membuat permintaan ke OpenAI
     const completion = await openai.chat.completions.create({
       messages: [
         { role: "system", content: "You are a helpful assistant" },
-        { role: "user", content: "what is nodemon nodejs function?" },
+        { role: "user", content: userQuestion }, // Menggunakan pertanyaan dari pengguna
       ],
       model: "gpt-4-turbo",
     });
-    console.log(completion.choices[0]);
+
+    // Mengembalikan respons berdasarkan jawaban dari model AI
     res.json(completion.choices[0].message.content);
   } catch (error) {
     console.error("Error:", error.message);
@@ -87,8 +100,9 @@ app.get("/completion", async (req, res) => {
 });
 
 app.post("/imagechat", async (req, res) => {
-  const question = "Please summarize this file";
-  const imagePath = "uploads/superseru.png";
+  // Mengambil pertanyaan dari body permintaan jika tersedia, jika tidak, gunakan pertanyaan default
+  const question = req.body.question || "Please summarize this file";
+  const imagePath = "uploads/superseru.png"; // Tetap gunakan path gambar default
 
   try {
     const contents = fs.readFileSync(imagePath);
@@ -135,7 +149,8 @@ app.post("/imagechat", async (req, res) => {
 
 
 const PORT = process.env.PORT || 5000;
+const IP_ADDRESS = "192.168.15.67"; // Ganti dengan IP Address Anda
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+app.listen(PORT, IP_ADDRESS, () => {
+  console.log(`Server is running on http://${IP_ADDRESS}:${PORT}`);
 });
