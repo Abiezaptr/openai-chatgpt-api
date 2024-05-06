@@ -5,6 +5,7 @@ import cors from "cors"; // Import middleware CORS
 import dotenv from "dotenv";
 import axios from "axios";
 import fs from "fs";
+import { error } from "console";
 
 dotenv.config();
 
@@ -101,7 +102,7 @@ app.get("/completion", async (req, res) => {
 
 app.post("/imagechat", async (req, res) => {
   // Mengambil pertanyaan dari body permintaan jika tersedia, jika tidak, gunakan pertanyaan default
-  const question = req.body.question || "Please summarize this file";
+  const question = req.body.question;
   const imagePath = "uploads/superseru.png"; // Tetap gunakan path gambar default
 
   try {
@@ -149,7 +150,7 @@ app.post("/imagechat", async (req, res) => {
 
 
 const PORT = process.env.PORT || 5000;
-const IP_ADDRESS = "10.107.195.96"; // Ganti dengan IP Address Anda
+const IP_ADDRESS = "192.168.177.67"; // Ganti dengan IP Address Anda
 
 app.listen(PORT, IP_ADDRESS, () => {
   console.log(`Server is running on http://${IP_ADDRESS}:${PORT}`);
