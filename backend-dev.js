@@ -6,6 +6,7 @@ import dotenv from "dotenv";
 import axios from "axios";
 import fs from "fs";
 import { error } from "console";
+import { type } from "os";
 
 dotenv.config();
 
@@ -148,9 +149,125 @@ app.post("/imagechat", async (req, res) => {
   }
 });
 
+app.post("/vision", async (req, res) => {
+  // Pertanyaan yang di-hardcode
+  const question = "give me key points from this image";
+
+  const imagePath = "uploads/sample.png"; // Tetap gunakan path gambar default
+
+  try {
+    const contents = fs.readFileSync(imagePath);
+    const base64_image = `data:image/jpeg;base64,${contents.toString("base64")}`;
+
+    const payload = {
+      model: "gpt-4-vision-preview",
+      messages: [
+        {
+          role: "user",
+          content: [
+            { type: "text", text: question },
+            { type: "image_url", image_url: { url: base64_image } },
+          ],
+        },
+      ],
+      max_tokens: 2000,
+    };
+
+    const headers = {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${process.env.OPENAI_API_KEY}`,
+    };
+
+    const response = await axios.post(
+      "https://api.openai.com/v1/chat/completions",
+      payload,
+      { headers }
+    );
+
+    // Extract key points from the summary
+    const summary = response.data.choices[0].message.content;
+    const keyPoints = extractKeyPoints(summary);
+
+    const filteredData = {
+      prompt: question,
+      model: response.data.model,
+      summary: keyPoints,
+    };
+
+    return res.status(200).json(filteredData);
+  } catch (error) {
+    console.error("Error:", error.message);
+    return res.status(500).json({ error: "Error processing request" });
+  }
+});
+
+function cleanInsightText(insight) {
+  // Menghapus tanda ** dan teks yang terdapat di dalamnya
+  let cleanText = insight.replace(/\*\*[^*]+\*\*/g, '');
+
+  // Menghapus karakter yang tidak diinginkan seperti \n dan karakter khusus lainnya
+  cleanText = cleanText.replace(/[\r\n]+/g, ' ').replace(/\s\s+/g, ' ');
+
+  // Menghapus karakter yang tidak jelas seperti \", \", dsb.
+  cleanText = cleanText.replace(/\\?"|\\?"/g, '');
+
+  return cleanText.trim();
+}
+
+app.post("/dashboard", async (req, res) => {
+  try {
+    const prompt = fs.readFileSync("uploads/prompt.txt", "utf-8");
+    const base64_image = fs.readFileSync("uploads/byU_SalesActivation.png", { encoding: 'base64' });
+
+    const payload = {
+      model: "gpt-4-vision-preview",
+      messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image", image: base64_image }] }],
+      max_tokens: 800,
+    };
+
+    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_API_KEY}` };
+    const response = await axios.post("https://api.openai.com/v1/chat/completions", payload, { headers });
+    const insight = response.data.choices[0].message.content;
+
+    // Membersihkan teks insight
+    const cleanedInsight = cleanInsightText(insight);
+
+    return res.status(200).json({ insight: cleanedInsight });
+  } catch (error) {
+    console.error("Error:", error.message);
+    return res.status(500).json({ error: "Error processing request" });
+  }
+});
+
+app.post("/gpto-text", async (req, res) => {
+  try {
+     const predefinedPrompt = "This is a predefined prompt text to generate a response using the GPT-4o model.";
+
+    const payload = {
+      model: "gpt-4o",
+      messages: [{ role: "user", content: predefinedPrompt }],
+      max_tokens: 800,
+    };
+
+    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_API_KEY}` };
+    const response = await axios.post("https://api.openai.com/v1/chat/completions", payload, { headers });
+    const insight = response.data.choices[0].message.content;
+    const cleanedInsight = cleanInsightText(insight);
+
+    return res.status(200).json({ insight: cleanedInsight });
+  } catch (error) {
+    console.error("Error:", error.message);
+    return res.status(500).json({ error: "Error proccessing request" });
+  }
+});
+
+app.listen(3000, () => {
+  console.log("Server is running on port 3000");
+});
 
 const PORT = process.env.PORT || 5000;
-const IP_ADDRESS = "192.168.177.67"; // Ganti dengan IP Address Anda
+// const IP_ADDRESS = "192.168.129.67"; // Ganti dengan IP Address Anda
+const IP_ADDRESS = "192.168.252.67"; // Ganti dengan IP Address Anda
 
 app.listen(PORT, IP_ADDRESS, () => {
   console.log(`Server is running on http://${IP_ADDRESS}:${PORT}`);
