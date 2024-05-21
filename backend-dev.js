@@ -239,7 +239,7 @@ app.post("/dashboard", async (req, res) => {
   }
 });
 
-app.post("/gpto-text", async (req, res) => {
+app.post("/omni-text", async (req, res) => {
   try {
      const predefinedPrompt = "This is a predefined prompt text to generate a response using the GPT-4o model.";
 
