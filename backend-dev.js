@@ -7,12 +7,14 @@ import axios from "axios";
 import fs from "fs";
 import { error } from "console";
 import { type } from "os";
+import multer from "multer";
 
 dotenv.config();
 
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
 
 const app = express();
+const upload = multer();
 app.use(bodyParser.json());
 app.use(cors()); // Tambahkan middleware CORS ke aplikasi Express
 
@@ -241,7 +243,7 @@ app.post("/dashboard", async (req, res) => {
 
 app.post("/omni-text", async (req, res) => {
   try {
-     const predefinedPrompt = "This is a predefined prompt text to generate a response using the GPT-4o model.";
+     const predefinedPrompt = "Jelaskan apa itu array?";
 
     const payload = {
       model: "gpt-4o",
@@ -261,6 +263,32 @@ app.post("/omni-text", async (req, res) => {
   }
 });
 
+app.post("/upload-file", upload.single('image'), async (req, res) => {
+  try {
+    const prompt = fs.readFileSync("uploads/prompt.txt", "utf-8");
+
+    // Ambil data file gambar dari buffer yang diunggah
+    const base64_image = req.file.buffer.toString('base64');
+
+    const payload = {
+      model: "gpt-4-vision-preview",
+      messages: [{ role: "user", content: [{ type: "text", text: prompt }, { type: "image", image: base64_image }] }],
+      max_tokens: 800,
+    };
+
+    const headers = { "Content-Type": "application/json", Authorization: `Bearer ${process.env.OPENAI_API_KEY}` };
+    const response = await axios.post("https://api.openai.com/v1/chat/completions", payload, { headers });
+    const insight = response.data.choices[0].message.content;
+
+    // Membersihkan teks insight
+    const cleanedInsight = cleanInsightText(insight);
+
+    return res.status(200).json({ insight: cleanedInsight });
+  } catch (error) {
+    console.error("Error:", error.message);
+    return res.status(500).json({ error: "Error processing request" });
+  }
+});
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
