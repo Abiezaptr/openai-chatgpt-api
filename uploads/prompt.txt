@@ -1,1 +1,1 @@
-extract 4 key insights from this image
+Extract 4 main points briefly from this image. Each point should be maximum one sentence.

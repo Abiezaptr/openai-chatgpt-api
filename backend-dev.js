@@ -217,7 +217,7 @@ function cleanInsightText(insight) {
 app.post("/dashboard", async (req, res) => {
   try {
     const prompt = fs.readFileSync("uploads/prompt.txt", "utf-8");
-    const base64_image = fs.readFileSync("uploads/byU_SalesActivation.png", { encoding: 'base64' });
+    const base64_image = fs.readFileSync("uploads/Games_Dashboard.png", { encoding: 'base64' });
 
     const payload = {
       model: "gpt-4-vision-preview",
@@ -260,6 +260,7 @@ app.post("/omni-text", async (req, res) => {
     return res.status(500).json({ error: "Error proccessing request" });
   }
 });
+
 
 app.listen(3000, () => {
   console.log("Server is running on port 3000");
